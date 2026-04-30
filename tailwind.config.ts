@@ -57,6 +57,21 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "primary-glow": "hsl(var(--primary-glow))",
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        danger: "hsl(var(--danger))",
+        grade: {
+          1: "hsl(var(--grade-1))",
+          2: "hsl(var(--grade-2))",
+          3: "hsl(var(--grade-3))",
+          4: "hsl(var(--grade-4))",
+          5: "hsl(var(--grade-5))",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["'Plus Jakarta Sans'", "Inter", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
