@@ -11,6 +11,7 @@ import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import CartCheckout from "./pages/CartCheckout.tsx";
+import UserDashboard from "./pages/UserDashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/cart-checkout" element={<CartCheckout />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CartProvider>

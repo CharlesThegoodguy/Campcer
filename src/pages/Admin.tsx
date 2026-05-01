@@ -135,21 +135,31 @@ const Admin = () => {
                       <StatusBadge status={o.status} />
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {o.user_name && <span className="font-medium">{o.user_name} · </span>}
+                      {o.user_name && <span className="font-medium">{o.user_name} ({o.user_email}) · {o.user_phone ? `WA: ${o.user_phone}` : 'No HP -'} · </span>}
                       {o.people} orang · {o.days} hari · {formatIDR(o.total_price)}
                     </p>
                     {o.notes && <p className="mt-1 text-sm text-muted-foreground">📝 {o.notes}</p>}
                     <p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("id-ID")}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {o.simaksi_url && (
-                      <button
-                        onClick={() => setSimaksiModal(`http://localhost:5000${o.simaksi_url}`)}
-                        className="flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> SIMAKSI
-                      </button>
-                    )}
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex gap-2">
+                      {o.simaksi_url && (
+                        <button
+                          onClick={() => setSimaksiModal(`http://localhost:5000${o.simaksi_url}`)}
+                          className="flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> SIMAKSI
+                        </button>
+                      )}
+                      {o.payment_proof_url && (
+                        <button
+                          onClick={() => setSimaksiModal(`http://localhost:5000${o.payment_proof_url}`)}
+                          className="flex items-center gap-1 rounded-lg bg-green-500/10 px-3 py-1.5 text-xs font-semibold text-green-600 hover:bg-green-500/20"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Transfer
+                        </button>
+                      )}
+                    </div>
                     <select
                       value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)}
                       className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs font-medium"

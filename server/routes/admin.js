@@ -11,7 +11,7 @@ const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now(
 router.get('/orders', async (req, res) => {
     try {
         const [orders] = await db.execute(`
-            SELECT o.*, u.full_name as user_name, u.email as user_email
+            SELECT o.*, u.full_name as user_name, u.email as user_email, u.phone as user_phone
             FROM orders o
             JOIN users u ON o.user_id = u.id
             ORDER BY o.created_at DESC
@@ -25,12 +25,49 @@ router.get('/orders', async (req, res) => {
 
 // PATCH /api/admin/orders/:id/status
 router.patch('/orders/:id/status', async (req, res) => {
+    const connection = await db.getConnection();
     try {
-        await db.execute('UPDATE orders SET status = ? WHERE id = ?', [req.body.status, req.params.id]);
+        await connection.beginTransaction();
+        const { status } = req.body;
+        const orderId = req.params.id;
+
+        // Get current status
+        const [orderRows] = await connection.execute('SELECT status FROM orders WHERE id = ?', [orderId]);
+        if (orderRows.length === 0) throw new Error('Pesanan tidak ditemukan');
+        const currentStatus = orderRows[0].status;
+
+        await connection.execute('UPDATE orders SET status = ? WHERE id = ?', [status, orderId]);
+
+        // Restore stock if transitioning to returned or cancelled
+        if ((status === 'returned' || status === 'cancelled') && (currentStatus !== 'returned' && currentStatus !== 'cancelled')) {
+            const [items] = await connection.execute('SELECT product_name, quantity FROM order_items WHERE order_id = ?', [orderId]);
+            for (const item of items) {
+                await connection.execute(
+                    'UPDATE products SET stock = stock + ? WHERE name = ?',
+                    [item.quantity, item.product_name]
+                );
+            }
+        }
+
+        // Deduct stock again if transitioning FROM returned/cancelled to active/confirmed (optional safety)
+        if ((currentStatus === 'returned' || currentStatus === 'cancelled') && (status !== 'returned' && status !== 'cancelled')) {
+            const [items] = await connection.execute('SELECT product_name, quantity FROM order_items WHERE order_id = ?', [orderId]);
+            for (const item of items) {
+                await connection.execute(
+                    'UPDATE products SET stock = stock - ? WHERE name = ?',
+                    [item.quantity, item.product_name]
+                );
+            }
+        }
+
+        await connection.commit();
         res.json({ message: 'Status berhasil diperbarui' });
     } catch (err) {
+        await connection.rollback();
         console.error('[ADMIN STATUS ERROR]', err.message);
         res.status(500).json({ error: 'Gagal update status' });
+    } finally {
+        connection.release();
     }
 });
 

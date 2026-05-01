@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,7 +23,7 @@ const Login = () => {
         const res = await fetch("http://localhost:5000/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, full_name: fullName }),
+          body: JSON.stringify({ email, password, full_name: fullName, phone }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Gagal mendaftar");
@@ -64,14 +65,24 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-foreground">Nama Lengkap</label>
-                <input
-                  type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
-                  required className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  placeholder="Nama lengkap"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-foreground">Nama Lengkap</label>
+                  <input
+                    type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
+                    required className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="Nama lengkap"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-foreground">Nomor Telepon / WhatsApp</label>
+                  <input
+                    type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                    required className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="081234567890"
+                  />
+                </div>
+              </>
             )}
             <div>
               <label className="mb-1 block text-sm font-semibold text-foreground">Email</label>

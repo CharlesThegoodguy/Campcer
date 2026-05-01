@@ -28,9 +28,9 @@ export const Navbar = () => {
                   <Shield className="h-3.5 w-3.5" /> Admin
                 </Link>
               )}
-              <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
-                <User className="h-3.5 w-3.5" /> {user.email}
-              </span>
+              <Link to="/dashboard" className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-2 text-xs font-semibold text-secondary-foreground hover:bg-secondary/80 sm:flex">
+                <User className="h-3.5 w-3.5" /> Profil & Pesanan
+              </Link>
               <button
                 onClick={signOut}
                 className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-2 text-xs font-semibold text-secondary-foreground hover:bg-secondary/80"

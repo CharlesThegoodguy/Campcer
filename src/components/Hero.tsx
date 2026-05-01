@@ -51,7 +51,7 @@ export const Hero = () => (
             <div className="text-sm text-white/70">Gunung tercover</div>
           </div>
           <div>
-            <div className="font-display text-3xl font-bold">25+</div>
+            <div className="font-display text-3xl font-bold">100+</div>
             <div className="text-sm text-white/70">Alat tersedia</div>
           </div>
           <div>

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS orders (
     total_price   DECIMAL(15, 2) NOT NULL DEFAULT 0,
     status        ENUM('pending', 'confirmed', 'active', 'returned', 'cancelled') NOT NULL DEFAULT 'pending',
     simaksi_url   TEXT,
+    payment_proof_url TEXT,
     notes         TEXT NOT NULL DEFAULT '',
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -58,7 +59,12 @@ CREATE TABLE IF NOT EXISTS order_items (
     CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Admin default (password: admin123)
+-- Admin default (password: password123)
 INSERT INTO users (id, email, password_hash, full_name, role)
-VALUES ('admin-campcer-001', 'admin@campcer.com', '$2b$10$wN9iL60m02M4Z.g7N/T8KOrU2yO.0g1E/3A64z9.I4i44LwO6V1b2', 'Administrator', 'admin')
-ON DUPLICATE KEY UPDATE role = 'admin';
+VALUES ('admin-campcer-001', 'admin@campcer.com', '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa', 'Administrator', 'admin')
+ON DUPLICATE KEY UPDATE role = 'admin', password_hash = '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa';
+
+-- User default (password: password123)
+INSERT INTO users (id, email, password_hash, full_name, role)
+VALUES ('user-campcer-002', 'user@campcer.com', '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa', 'Demo User', 'user')
+ON DUPLICATE KEY UPDATE role = 'user', password_hash = '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa';

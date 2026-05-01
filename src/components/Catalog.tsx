@@ -78,28 +78,30 @@ export const Catalog = () => {
           <>
             <h3 className="mb-4 font-display text-lg font-bold text-muted-foreground">Paket Bundling</h3>
             <div className="mb-10 grid gap-5 md:grid-cols-3">
-              {PACKAGES.map((p) => (
+              {products.filter(p => p.category === "package").map((p) => (
                 <div key={p.id} className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-forest p-6 text-primary-foreground shadow-card-soft transition-smooth hover:shadow-elegant">
-                  <div className="absolute -right-6 -top-6 text-7xl opacity-10">⛺</div>
+                  <div className="absolute -right-6 -top-6 text-7xl opacity-10">{p.emoji || "⛺"}</div>
                   <div className="relative">
-                    <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
-                      {p.capacity} orang
-                    </span>
                     <h4 className="mt-3 font-display text-xl font-bold">{p.name}</h4>
                     <p className="mt-1 text-sm text-white/80">{p.description}</p>
                     <div className="mt-5 flex items-end justify-between">
                       <div>
-                        <div className="font-display text-2xl font-extrabold">{formatIDR(p.pricePerDay)}</div>
+                        <div className="font-display text-2xl font-extrabold">{formatIDR(p.price_per_day)}</div>
                         <div className="text-xs text-white/70">per hari</div>
                       </div>
-                      {/* Note: Packages are not added to cart yet, they usually go via TripPlanner, but let's make it addable if needed, or leave it as info */}
-                      <button className="rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-glow transition-smooth group-hover:scale-105">
-                        Info Paket
+                      <button 
+                        onClick={() => handleAddToCart(p)}
+                        className="rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-glow transition-smooth group-hover:scale-105"
+                      >
+                        + Keranjang
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
+              {products.filter(p => p.category === "package").length === 0 && (
+                <p className="text-muted-foreground">Belum ada paket bundling.</p>
+              )}
             </div>
           </>
         )}

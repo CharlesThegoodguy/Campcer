@@ -82,11 +82,19 @@ async function runMigrations() {
                 total_price   DECIMAL(15,2) NOT NULL DEFAULT 0,
                 status        ENUM('pending','confirmed','active','returned','cancelled') NOT NULL DEFAULT 'pending',
                 simaksi_url   TEXT,
+                payment_proof_url TEXT,
                 notes         TEXT NOT NULL DEFAULT '',
                 created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
+
+        // Pastikan kolom payment_proof_url ada (untuk migrasi tabel lama)
+        const [orderCols] = await conn.execute('SHOW COLUMNS FROM orders');
+        if (!orderCols.map(c => c.Field).includes('payment_proof_url')) {
+            await conn.execute(`ALTER TABLE orders ADD COLUMN payment_proof_url TEXT AFTER simaksi_url`);
+            console.log('[DB] ✅ Kolom payment_proof_url ditambahkan pada orders');
+        }
 
         // Buat tabel order_items
         await conn.execute(`
@@ -101,15 +109,26 @@ async function runMigrations() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
-        // Insert admin default jika belum ada
+        // Seed Akun Admin
         const [admins] = await conn.execute("SELECT id FROM users WHERE email = 'admin@campcer.com'");
         if (admins.length === 0) {
-            // password: admin123 (bcrypt hash)
+            // password: password123
             await conn.execute(`
                 INSERT INTO users (id, email, password_hash, full_name, role)
-                VALUES ('admin-campcer-001', 'admin@campcer.com', '$2b$10$wN9iL60m02M4Z.g7N/T8KOrU2yO.0g1E/3A64z9.I4i44LwO6V1b2', 'Administrator', 'admin')
+                VALUES ('admin-campcer-001', 'admin@campcer.com', '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa', 'Administrator', 'admin')
             `);
-            console.log('[DB] ✅ Akun admin default dibuat (admin@campcer.com / admin123)');
+            console.log('[DB] ✅ Akun admin default dibuat (admin@campcer.com / password123)');
+        }
+
+        // Seed Akun User Biasa
+        const [users] = await conn.execute("SELECT id FROM users WHERE email = 'user@campcer.com'");
+        if (users.length === 0) {
+            // password: password123
+            await conn.execute(`
+                INSERT INTO users (id, email, password_hash, full_name, role)
+                VALUES ('user-campcer-002', 'user@campcer.com', '$2b$10$i9hnAR4yQSZfXklOXLBbVOmM2ft/OSY40U7f.VLI3noCAzSj37fJa', 'Demo User', 'user')
+            `);
+            console.log('[DB] ✅ Akun user demo dibuat (user@campcer.com / password123)');
         }
 
         console.log('[DB] ✅ Migrasi selesai - semua tabel siap');

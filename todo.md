@@ -42,23 +42,23 @@ Berikut adalah ruang lingkup (scope) pengerjaan project **Campcer** (Sistem Peny
 ## ⏳ BELUM DIKERJAKAN (TODO / PENDING)
 
 ### 1. Fitur Admin (Dashboard)
-- [ ] **Manajemen Produk (CRUD)**: Fungsionalitas di UI Admin untuk menambah barang baru, mengedit harga/deskripsi, dan menghapus barang.
-- [ ] **Manajemen Pesanan**: Fungsionalitas bagi Admin untuk mengubah status pesanan (`pending` ➔ `confirmed` ➔ `active` ➔ `returned`).
-- [ ] **Manajemen Pengguna**: Admin bisa melihat detail pengguna dan riwayat transaksi mereka.
+- [x] **Manajemen Produk (CRUD)**: Fungsionalitas di UI Admin untuk menambah barang baru, mengedit harga/deskripsi, dan menghapus barang.
+- [x] **Manajemen Pesanan**: Fungsionalitas bagi Admin untuk mengubah status pesanan (`pending` ➔ `confirmed` ➔ `active` ➔ `returned`).
+- [x] **Manajemen Pengguna**: Admin bisa melihat detail pengguna dan riwayat transaksi mereka.
 
 ### 2. Fitur Pengguna (Riwayat Transaksi)
-- [ ] **Halaman "Pesanan Saya"**: Membuat halaman di mana pengguna biasa bisa melihat status pesanan mereka (apakah sudah dikonfirmasi, sedang aktif, atau sudah selesai).
-- [ ] **Profil Pengguna**: Halaman untuk mengganti password atau mengedit informasi kontak (no telepon).
+- [x] **Halaman "Pesanan Saya"**: Membuat halaman di mana pengguna biasa bisa melihat status pesanan mereka (apakah sudah dikonfirmasi, sedang aktif, atau sudah selesai).
+- [x] **Profil Pengguna**: Halaman untuk mengganti password atau mengedit informasi kontak (no telepon).
 
 ### 3. Paket Bundling (Packages)
-- [ ] Saat ini daftar Paket Bundling (Paket Hemat) di Katalog masih di-hardcode dari frontend (`src/data/equipment.ts`). Harus dipindahkan ke database (mungkin butuh tabel `packages` atau kategori khusus di `products`) agar bisa diedit oleh Admin.
+- [x] Saat ini daftar Paket Bundling (Paket Hemat) di Katalog masih di-hardcode dari frontend (`src/data/equipment.ts`). Harus dipindahkan ke database (mungkin butuh tabel `packages` atau kategori khusus di `products`) agar bisa diedit oleh Admin.
 
 ### 4. Sistem Pembayaran (Payment Gateway)
-- [ ] Integrasi metode pembayaran otomatis (seperti Midtrans/Xendit) **atau** membuat alur upload bukti transfer manual jika ingin tetap sederhana. Saat ini pembayaran masih diasumsikan "konfirmasi manual via Admin/WhatsApp".
+- [x] Integrasi metode pembayaran otomatis (seperti Midtrans/Xendit) **atau** membuat alur upload bukti transfer manual jika ingin tetap sederhana. Saat ini pembayaran masih diasumsikan "konfirmasi manual via Admin/WhatsApp".
 
 ### 5. UI/UX & Validasi Tambahan
-- [ ] Validasi stok barang: Memastikan pengguna tidak bisa menyewa barang yang kuantitasnya melebihi stok yang ada di database.
-- [ ] Pengecekan ketersediaan tanggal: Memastikan barang tidak di-double booking pada tanggal yang sama. (Fitur lanjutan).
+- [x] Validasi stok barang: Memastikan pengguna tidak bisa menyewa barang yang kuantitasnya melebihi stok yang ada di database.
+- [x] Pengecekan ketersediaan tanggal: Memastikan barang tidak di-double booking pada tanggal yang sama. (Fitur lanjutan).
 
 ---
 *Catatan: Dokumen ini dibuat otomatis pada tanggal 1 Mei 2026. Tandai checkbox `[ ]` menjadi `[x]` saat Anda sudah menyelesaikan tugas tersebut.*
