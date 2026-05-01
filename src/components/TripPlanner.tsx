@@ -1,6 +1,8 @@
 import { Mountain, MOUNTAINS, GRADE_INFO } from "@/data/mountains";
 import { recommend, formatIDR, Recommendation } from "@/lib/risk-engine";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, CheckCircle2, Info, Users, Calendar, MapPin, Sparkles, ListChecks } from "lucide-react";
 
 export const TripPlanner = () => {
@@ -171,9 +173,7 @@ export const TripPlanner = () => {
                   Untuk {people} orang × {days} hari
                 </div>
               </div>
-              <button className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-glow transition-smooth hover:scale-[1.02]">
-                Lanjut Sewa Paket Ini
-              </button>
+              <CheckoutButton mountainId={mountainId} days={days} people={people} />
             </div>
           </div>
         </div>
