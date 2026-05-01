@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MOUNTAINS } from "@/data/mountains";
@@ -11,8 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 const Checkout = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
 
   const mountainId = params.get("mountain") || "semeru";
   const days = parseInt(params.get("days") || "3");
@@ -24,7 +27,7 @@ const Checkout = () => {
   const [simaksiFile, setSimaksiFile] = useState<File | null>(null);
   const [simaksiPreview, setSimaksiPreview] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +48,7 @@ const Checkout = () => {
     }
     if (!user) return;
 
-    setLoading(true);
+    setSubmitting(true);
     try {
       // Upload SIMAKSI
       const ext = simaksiFile.name.split(".").pop();
@@ -88,7 +91,7 @@ const Checkout = () => {
     } catch (err: any) {
       toast({ title: "Gagal checkout", description: err.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -204,11 +207,11 @@ const Checkout = () => {
             </div>
 
             <button
-              onClick={handleCheckout} disabled={loading || !simaksiFile}
+              onClick={handleCheckout} disabled={submitting || !simaksiFile}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-elegant transition-smooth hover:bg-primary/90 disabled:opacity-50"
             >
               <Upload className="h-4 w-4" />
-              {loading ? "Memproses..." : "Konfirmasi & Sewa Sekarang"}
+              {submitting ? "Memproses..." : "Konfirmasi & Sewa Sekarang"}
             </button>
           </div>
         </div>
