@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link, Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MOUNTAINS } from "@/data/mountains";
 import { recommend, formatIDR } from "@/lib/risk-engine";
@@ -50,41 +49,31 @@ const Checkout = () => {
 
     setSubmitting(true);
     try {
-      // Upload SIMAKSI
-      const ext = simaksiFile.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("simaksi").upload(path, simaksiFile);
-      if (uploadErr) throw uploadErr;
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("simaksi", simaksiFile);
+      formData.append("mountain_name", mountain.name);
+      formData.append("days", days.toString());
+      formData.append("people", people.toString());
+      formData.append("total_price", result.estimatedCost.toString());
+      formData.append("notes", notes);
 
-      const { data: { publicUrl } } = supabase.storage.from("simaksi").getPublicUrl(path);
-
-      // Create order
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          mountain_name: mountain.name,
-          days,
-          people,
-          total_price: result.estimatedCost,
-          simaksi_url: publicUrl,
-          notes,
-          status: "pending",
-        })
-        .select()
-        .single();
-      if (orderErr) throw orderErr;
-
-      // Create order items
       const items = [...result.mandatory, ...result.suggested].map((it) => ({
-        order_id: order.id,
         product_name: it.equipment.name,
         quantity: it.quantity,
         price_per_day: it.equipment.pricePerDay,
         days,
       }));
-      const { error: itemsErr } = await supabase.from("order_items").insert(items);
-      if (itemsErr) throw itemsErr;
+      formData.append("items", JSON.stringify(items));
+
+      const res = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal membuat pesanan");
 
       setDone(true);
       toast({ title: "Pesanan berhasil!", description: "Admin akan memproses pesanan Anda." });
@@ -167,14 +156,13 @@ const Checkout = () => {
 
           {/* SIMAKSI Upload + Actions */}
           <div className="space-y-6">
-            {/* SIMAKSI Upload */}
             <div className="rounded-3xl border-2 border-dashed border-primary/30 bg-card p-6 shadow-card-soft">
               <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-warning" />
                 <h3 className="font-display text-lg font-bold">Upload Bukti SIMAKSI</h3>
               </div>
               <p className="mb-4 text-sm text-muted-foreground">
-                Foto bukti SIMAKSI (Surat Izin Masuk Kawasan) ke {mountain.name} wajib diupload. 
+                Foto bukti SIMAKSI (Surat Izin Masuk Kawasan) ke {mountain.name} wajib diupload.
                 Ini untuk memvalidasi tujuan alat sewa Anda.
               </p>
 
@@ -196,7 +184,6 @@ const Checkout = () => {
               )}
             </div>
 
-            {/* Notes */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-card-soft">
               <label className="mb-2 block text-sm font-semibold text-foreground">Catatan Tambahan (opsional)</label>
               <textarea

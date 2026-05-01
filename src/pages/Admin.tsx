@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { formatIDR } from "@/lib/risk-engine";
 import { Package, Users, FileCheck, Plus, Trash2, Edit2, Eye, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const API = "http://localhost:5000/api";
 
 type Tab = "products" | "orders" | "users";
 
@@ -18,10 +19,12 @@ const Admin = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [simaksiModal, setSimaksiModal] = useState<string | null>(null);
 
-  // Product form
   const [showProductForm, setShowProductForm] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [pForm, setPForm] = useState({ name: "", description: "", emoji: "🏕️", category: "basic", price_per_day: 0, stock: 0 });
+
+  const token = () => localStorage.getItem("token");
+  const authHeader = () => ({ Authorization: `Bearer ${token()}`, "Content-Type": "application/json" });
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -29,39 +32,63 @@ const Admin = () => {
   }, [isAdmin]);
 
   const fetchData = async () => {
-    const [o, p, u] = await Promise.all([
-      supabase.from("orders").select("*").order("created_at", { ascending: false }),
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-    ]);
-    if (o.data) setOrders(o.data);
-    if (p.data) setProducts(p.data);
-    if (u.data) setProfiles(u.data);
+    try {
+      const [oRes, pRes, uRes] = await Promise.all([
+        fetch(`${API}/admin/orders`, { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch(`${API}/admin/products`, { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token()}` } }),
+      ]);
+      const [o, p, u] = await Promise.all([oRes.json(), pRes.json(), uRes.json()]);
+      if (oRes.ok) setOrders(o.orders);
+      if (pRes.ok) setProducts(p.products);
+      if (uRes.ok) setProfiles(u.users);
+    } catch (err) {
+      console.error("Failed to fetch admin data", err);
+    }
   };
 
   const updateOrderStatus = async (id: string, status: string) => {
-    await supabase.from("orders").update({ status }).eq("id", id);
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    toast({ title: `Status diubah ke ${status}` });
+    try {
+      const res = await fetch(`${API}/admin/orders/${id}/status`, {
+        method: "PATCH",
+        headers: authHeader(),
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Gagal");
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+      toast({ title: `Status diubah ke ${status}` });
+    } catch {
+      toast({ title: "Gagal update status", variant: "destructive" });
+    }
   };
 
   const saveProduct = async () => {
-    if (editProduct) {
-      await supabase.from("products").update(pForm).eq("id", editProduct.id);
-    } else {
-      await supabase.from("products").insert({ ...pForm, is_active: true });
+    try {
+      const method = editProduct ? "PUT" : "POST";
+      const url = editProduct ? `${API}/admin/products/${editProduct.id}` : `${API}/admin/products`;
+      const res = await fetch(url, { method, headers: authHeader(), body: JSON.stringify(pForm) });
+      if (!res.ok) throw new Error("Gagal");
+      setShowProductForm(false);
+      setEditProduct(null);
+      setPForm({ name: "", description: "", emoji: "🏕️", category: "basic", price_per_day: 0, stock: 0 });
+      fetchData();
+      toast({ title: editProduct ? "Produk diperbarui" : "Produk ditambahkan" });
+    } catch {
+      toast({ title: "Gagal menyimpan produk", variant: "destructive" });
     }
-    setShowProductForm(false);
-    setEditProduct(null);
-    setPForm({ name: "", description: "", emoji: "🏕️", category: "basic", price_per_day: 0, stock: 0 });
-    fetchData();
-    toast({ title: editProduct ? "Produk diperbarui" : "Produk ditambahkan" });
   };
 
   const deleteProduct = async (id: string) => {
-    await supabase.from("products").delete().eq("id", id);
-    fetchData();
-    toast({ title: "Produk dihapus" });
+    try {
+      await fetch(`${API}/admin/products/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      fetchData();
+      toast({ title: "Produk dihapus" });
+    } catch {
+      toast({ title: "Gagal hapus produk", variant: "destructive" });
+    }
   };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
@@ -87,9 +114,8 @@ const Admin = () => {
           {tabs.map((t) => (
             <button
               key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-smooth ${
-                tab === t.key ? "bg-primary text-primary-foreground shadow-elegant" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-smooth ${tab === t.key ? "bg-primary text-primary-foreground shadow-elegant" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
             >
               <t.icon className="h-4 w-4" /> {t.label} <span className="ml-1 rounded-full bg-background/20 px-2 py-0.5 text-xs">{t.count}</span>
             </button>
@@ -109,6 +135,7 @@ const Admin = () => {
                       <StatusBadge status={o.status} />
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
+                      {o.user_name && <span className="font-medium">{o.user_name} · </span>}
                       {o.people} orang · {o.days} hari · {formatIDR(o.total_price)}
                     </p>
                     {o.notes && <p className="mt-1 text-sm text-muted-foreground">📝 {o.notes}</p>}
@@ -116,7 +143,10 @@ const Admin = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {o.simaksi_url && (
-                      <button onClick={() => setSimaksiModal(o.simaksi_url)} className="flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20">
+                      <button
+                        onClick={() => setSimaksiModal(`http://localhost:5000${o.simaksi_url}`)}
+                        className="flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+                      >
                         <Eye className="h-3.5 w-3.5" /> SIMAKSI
                       </button>
                     )}
@@ -156,7 +186,7 @@ const Admin = () => {
                   <input placeholder="Harga/hari (IDR)" type="number" value={pForm.price_per_day} onChange={(e) => setPForm({ ...pForm, price_per_day: +e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
                   <input placeholder="Stok" type="number" value={pForm.stock} onChange={(e) => setPForm({ ...pForm, stock: +e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
                   <select value={pForm.category} onChange={(e) => setPForm({ ...pForm, category: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary">
-                    <option value="basic">Basic</option>
+                    <option value="basic">Basic Pendakian</option>
                     <option value="standard">Standard</option>
                     <option value="premium">Premium</option>
                   </select>

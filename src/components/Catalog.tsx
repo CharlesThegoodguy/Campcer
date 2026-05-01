@@ -1,6 +1,8 @@
-import { EQUIPMENT, EquipmentCategory, PACKAGES } from "@/data/equipment";
+import { EquipmentCategory, PACKAGES } from "@/data/equipment";
 import { formatIDR } from "@/lib/risk-engine";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCart } from "@/context/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES: { id: EquipmentCategory | "all" | "package"; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -17,9 +19,29 @@ const CATEGORIES: { id: EquipmentCategory | "all" | "package"; label: string }[]
 
 export const Catalog = () => {
   const [active, setActive] = useState<typeof CATEGORIES[number]["id"]>("all");
+  const [products, setProducts] = useState<any[]>([]);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.products) setProducts(data.products);
+      })
+      .catch((err) => console.error("Failed to fetch products:", err));
+  }, []);
+
+  const handleAddToCart = (product: any) => {
+    addToCart(product);
+    toast({
+      title: "Berhasil ditambahkan",
+      description: `${product.name} dimasukkan ke keranjang`,
+    });
+  };
 
   const showPackages = active === "all" || active === "package";
-  const items = active === "package" ? [] : EQUIPMENT.filter((e) => active === "all" || e.category === active);
+  const items = active === "package" ? [] : products.filter((e) => active === "all" || e.category === active);
 
   return (
     <section id="catalog" className="py-24">
@@ -70,8 +92,9 @@ export const Catalog = () => {
                         <div className="font-display text-2xl font-extrabold">{formatIDR(p.pricePerDay)}</div>
                         <div className="text-xs text-white/70">per hari</div>
                       </div>
+                      {/* Note: Packages are not added to cart yet, they usually go via TripPlanner, but let's make it addable if needed, or leave it as info */}
                       <button className="rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-glow transition-smooth group-hover:scale-105">
-                        Sewa
+                        Info Paket
                       </button>
                     </div>
                   </div>
@@ -81,7 +104,7 @@ export const Catalog = () => {
           </>
         )}
 
-        {items.length > 0 && (
+        {items.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((e) => (
               <div key={e.id} className="group flex flex-col rounded-2xl border border-border bg-card p-5 transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-elegant">
@@ -89,28 +112,26 @@ export const Catalog = () => {
                   {e.emoji}
                 </div>
                 <div className="flex flex-1 flex-col">
-                  <div className="mb-1 flex items-center gap-1.5">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                      e.tier === "premium" ? "text-accent" : e.tier === "standard" ? "text-primary" : "text-muted-foreground"
-                    }`}>
-                      {e.tier}
-                    </span>
-                  </div>
                   <h4 className="font-semibold leading-tight">{e.name}</h4>
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{e.description}</p>
                   <div className="mt-auto flex items-end justify-between pt-4">
                     <div>
-                      <div className="font-display text-lg font-bold text-primary">{formatIDR(e.pricePerDay)}</div>
+                      <div className="font-display text-lg font-bold text-primary">{formatIDR(e.price_per_day)}</div>
                       <div className="text-[10px] text-muted-foreground">per hari</div>
                     </div>
-                    <button className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground">
-                      + Sewa
+                    <button 
+                      onClick={() => handleAddToCart(e)}
+                      className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground"
+                    >
+                      + Keranjang
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        ) : (
+          !showPackages && <div className="py-12 text-center text-muted-foreground">Belum ada alat di kategori ini.</div>
         )}
       </div>
     </section>

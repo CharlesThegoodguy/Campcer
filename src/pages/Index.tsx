@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { Catalog } from "@/components/Catalog";
 import { MountainsList } from "@/components/MountainsList";
 import { Footer } from "@/components/Footer";
+import { CartWidget } from "@/components/CartWidget";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
         <MountainsList />
       </main>
       <Footer />
+      <CartWidget />
     </div>
   );
 };

@@ -1,95 +1,74 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   isAdmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   isAdmin: false,
   loading: true,
   signOut: async () => {},
+  checkAuth: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkAdmin = useCallback(async (userId: string) => {
+  const checkAuth = useCallback(async () => {
+    setLoading(true);
     try {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle();
-      return !!data;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("http://localhost:5000/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Token tidak valid");
+
+      const data = await res.json();
+      setUser(data.user);
+      setIsAdmin(data.user.role === "admin");
     } catch {
-      return false;
+      localStorage.removeItem("token");
+      setUser(null);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    // Set up listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!mounted) return;
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          // Use setTimeout to avoid deadlock with Supabase auth
-          setTimeout(async () => {
-            if (!mounted) return;
-            const admin = await checkAdmin(session.user.id);
-            if (mounted) {
-              setIsAdmin(admin);
-              setLoading(false);
-            }
-          }, 0);
-        } else {
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
-    );
-
-    // THEN get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const admin = await checkAdmin(session.user.id);
-        if (mounted) {
-          setIsAdmin(admin);
-        }
-      }
-      if (mounted) setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [checkAdmin]);
+    checkAuth();
+  }, [checkAuth]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("token");
+    setUser(null);
+    setIsAdmin(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, signOut, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );
