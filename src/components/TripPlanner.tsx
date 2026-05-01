@@ -211,3 +211,22 @@ const ItemRow = ({ item, days }: { item: ReturnType<typeof recommend>["mandatory
     </div>
   </div>
 );
+
+const CheckoutButton = ({ mountainId, days, people }: { mountainId: string; days: number; people: number }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleClick = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    navigate(`/checkout?mountain=${mountainId}&days=${days}&people=${people}`);
+  };
+
+  return (
+    <button onClick={handleClick} className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-glow transition-smooth hover:scale-[1.02]">
+      {user ? "Lanjut Sewa Paket Ini" : "Login untuk Sewa"}
+    </button>
+  );
+};
