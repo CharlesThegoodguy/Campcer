@@ -27,7 +27,7 @@ const Checkout = () => {
   const [simaksiFile, setSimaksiFile] = useState<File | null>(null);
   const [simaksiPreview, setSimaksiPreview] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
