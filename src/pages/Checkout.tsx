@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MOUNTAINS } from "@/data/mountains";
@@ -11,8 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 const Checkout = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
 
   const mountainId = params.get("mountain") || "semeru";
   const days = parseInt(params.get("days") || "3");
