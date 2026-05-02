@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { MOUNTAINS } from "@/data/mountains";
 import { recommend, formatIDR } from "@/lib/risk-engine";
 import { Navbar } from "@/components/Navbar";
-import { Upload, CheckCircle2, AlertTriangle, ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/CartContext";
 
 const Checkout = () => {
   const [params] = useSearchParams();
@@ -23,84 +24,32 @@ const Checkout = () => {
   const mountain = MOUNTAINS.find((m) => m.id === mountainId)!;
   const result = useMemo(() => recommend({ mountain, days, people }), [mountain, days, people]);
 
-  const [simaksiFile, setSimaksiFile] = useState<File | null>(null);
-  const [simaksiPreview, setSimaksiPreview] = useState<string | null>(null);
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File terlalu besar", description: "Maksimal 5MB", variant: "destructive" });
-      return;
-    }
-    setSimaksiFile(file);
-    setSimaksiPreview(URL.createObjectURL(file));
-  }, [toast]);
+  const handleAddAllToCart = () => {
+    setAdding(true);
+    const allItems = [...result.mandatory, ...result.suggested];
+    
+    // We map hardcoded Risk Engine items to the format expected by the Cart.
+    // The cart uses standard product format, but the risk engine output has `equipment`
+    allItems.forEach(it => {
+      // Simulate adding to cart multiple times if quantity > 1
+      for(let i=0; i<it.quantity; i++) {
+        addToCart({
+          id: it.equipment.id,
+          name: it.equipment.name,
+          price_per_day: it.equipment.pricePerDay,
+          emoji: it.equipment.emoji
+        });
+      }
+    });
 
-  const handleCheckout = async () => {
-    if (!simaksiFile) {
-      toast({ title: "Upload SIMAKSI", description: "Foto bukti SIMAKSI wajib diupload sebelum checkout.", variant: "destructive" });
-      return;
-    }
-    if (!user) return;
-
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem("token");
-      const formData = new FormData();
-      formData.append("simaksi", simaksiFile);
-      formData.append("mountain_name", mountain.name);
-      formData.append("days", days.toString());
-      formData.append("people", people.toString());
-      formData.append("total_price", result.estimatedCost.toString());
-      formData.append("notes", notes);
-
-      const items = [...result.mandatory, ...result.suggested].map((it) => ({
-        product_name: it.equipment.name,
-        quantity: it.quantity,
-        price_per_day: it.equipment.pricePerDay,
-        days,
-      }));
-      formData.append("items", JSON.stringify(items));
-
-      const res = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal membuat pesanan");
-
-      setDone(true);
-      toast({ title: "Pesanan berhasil!", description: "Admin akan memproses pesanan Anda." });
-    } catch (err: any) {
-      toast({ title: "Gagal checkout", description: err.message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    toast({ title: "Berhasil", description: "Semua rekomendasi alat ditambahkan ke keranjang." });
+    setTimeout(() => {
+      navigate('/cart-checkout');
+    }, 500);
   };
-
-  if (done) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto flex flex-col items-center justify-center px-4 py-24 text-center">
-          <CheckCircle2 className="mb-4 h-16 w-16 text-success" />
-          <h1 className="font-display text-3xl font-bold">Pesanan Berhasil!</h1>
-          <p className="mt-2 text-muted-foreground">
-            Pesanan Anda sedang diproses oleh admin. Kami akan menghubungi Anda segera.
-          </p>
-          <Link to="/" className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-elegant">
-            Kembali ke Beranda
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,7 +59,7 @@ const Checkout = () => {
           <ArrowLeft className="h-4 w-4" /> Kembali
         </button>
 
-        <h1 className="mb-8 font-display text-3xl font-bold">Checkout Sewa Alat</h1>
+        <h1 className="mb-8 font-display text-3xl font-bold">Rekomendasi Alat Pendakian</h1>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
           {/* Order Summary */}
@@ -154,52 +103,31 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* SIMAKSI Upload + Actions */}
+          {/* Info + Actions */}
           <div className="space-y-6">
-            <div className="rounded-3xl border-2 border-dashed border-primary/30 bg-card p-6 shadow-card-soft">
-              <div className="mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-                <h3 className="font-display text-lg font-bold">Upload Bukti SIMAKSI</h3>
+            <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 shadow-card-soft">
+              <div className="mb-3 flex items-center gap-2 text-primary">
+                <Info className="h-5 w-5" />
+                <h3 className="font-display text-lg font-bold">Sistem Tidak Mewajibkan Sewa</h3>
               </div>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Foto bukti SIMAKSI (Surat Izin Masuk Kawasan) ke {mountain.name} wajib diupload.
-                Ini untuk memvalidasi tujuan alat sewa Anda.
+              <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
+                Hasil perhitungan ini hanyalah <span className="font-semibold text-foreground">Rekomendasi Sistem (Trip Planner)</span> untuk keamanan pendakian Anda di {mountain.name}. Anda bebas untuk mengurangi, menambah, atau tidak menyewa alat sama sekali jika sudah memiliki alat sendiri.
               </p>
-
-              {simaksiPreview ? (
-                <div className="relative mb-4">
-                  <img src={simaksiPreview} alt="Preview SIMAKSI" className="w-full rounded-2xl object-cover" />
-                  <button
-                    onClick={() => { setSimaksiFile(null); setSimaksiPreview(null); }}
-                    className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-destructive-foreground"
-                  >✕</button>
-                </div>
-              ) : (
-                <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-background p-8 transition-smooth hover:border-primary/50">
-                  <Camera className="h-10 w-10 text-muted-foreground" />
-                  <span className="text-sm font-semibold text-muted-foreground">Klik untuk upload foto SIMAKSI</span>
-                  <span className="text-xs text-muted-foreground">JPG, PNG, max 5MB</span>
-                  <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                </label>
-              )}
-            </div>
-
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-card-soft">
-              <label className="mb-2 block text-sm font-semibold text-foreground">Catatan Tambahan (opsional)</label>
-              <textarea
-                value={notes} onChange={(e) => setNotes(e.target.value)}
-                rows={3} placeholder="Contoh: sudah ambil alat jam 5 sore..."
-                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+              <p className="text-sm text-muted-foreground">
+                Jika Anda ingin menyewa, Anda dapat memasukkan semua rekomendasi ini ke keranjang, lalu mengaturnya kembali (menghapus yang tidak perlu) sebelum melakukan checkout akhir.
+              </p>
             </div>
 
             <button
-              onClick={handleCheckout} disabled={submitting || !simaksiFile}
+              onClick={handleAddAllToCart} disabled={adding}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-elegant transition-smooth hover:bg-primary/90 disabled:opacity-50"
             >
-              <Upload className="h-4 w-4" />
-              {submitting ? "Memproses..." : "Konfirmasi & Sewa Sekarang"}
+              <ShoppingCart className="h-5 w-5" />
+              {adding ? "Menambahkan..." : "Tambahkan Semua ke Keranjang"}
             </button>
+            <Link to="/#catalog" className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-sm font-bold text-secondary-foreground shadow-sm transition-smooth hover:bg-secondary/80">
+              Lihat Katalog Sendiri
+            </Link>
           </div>
         </div>
       </div>

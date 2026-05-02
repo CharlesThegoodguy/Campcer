@@ -80,39 +80,64 @@ router.post('/', verifyToken, upload.single('simaksi'), async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { mountain_name, days, people, total_price, notes, items } = req.body;
+        const { mountain_name, days, people, total_price, notes, items, delivery_method } = req.body;
         const parsedItems = JSON.parse(items || '[]');
 
         // Cek Stok terlebih dahulu
         for (const item of parsedItems) {
+            const baseName = item.product_name.replace(/ \(Size: .*\)$/, '');
+            const sizeMatch = item.product_name.match(/ \(Size: (.*)\)$/);
+            const selectedSize = sizeMatch ? sizeMatch[1] : null;
+
             const [productRows] = await connection.execute(
-                'SELECT id, stock, name FROM products WHERE name = ? LIMIT 1',
-                [item.product_name]
+                'SELECT id, stock, name, sizes FROM products WHERE name = ? LIMIT 1',
+                [baseName]
             );
             
             if (productRows.length === 0) {
-                throw new Error(`Produk ${item.product_name} tidak ditemukan dalam sistem.`);
+                throw new Error(`Produk ${baseName} tidak ditemukan dalam sistem.`);
             }
 
             const product = productRows[0];
-            if (product.stock < item.quantity) {
-                throw new Error(`Stok ${item.product_name} tidak mencukupi. Tersisa: ${product.stock}`);
-            }
+            
+            if (selectedSize && product.sizes) {
+                let sizesList = [];
+                try { sizesList = JSON.parse(product.sizes); } catch {}
+                const sizeObj = sizesList.find(s => s.size === selectedSize);
+                
+                if (!sizeObj) {
+                    throw new Error(`Ukuran ${selectedSize} untuk produk ${baseName} tidak tersedia.`);
+                }
+                if (sizeObj.stock < item.quantity) {
+                    throw new Error(`Stok ukuran ${selectedSize} tidak mencukupi. Tersisa: ${sizeObj.stock}`);
+                }
+                
+                // Kurangi stok di dalam JSON sizes
+                sizeObj.stock -= item.quantity;
+                await connection.execute(
+                    'UPDATE products SET sizes = ? WHERE id = ?',
+                    [JSON.stringify(sizesList), product.id]
+                );
+            } else {
+                if (product.stock < item.quantity) {
+                    throw new Error(`Stok ${baseName} tidak mencukupi. Tersisa: ${product.stock}`);
+                }
 
-            // Kurangi stok
-            await connection.execute(
-                'UPDATE products SET stock = stock - ? WHERE id = ?',
-                [item.quantity, product.id]
-            );
+                // Kurangi stok utama
+                await connection.execute(
+                    'UPDATE products SET stock = stock - ? WHERE id = ?',
+                    [item.quantity, product.id]
+                );
+            }
         }
 
         const simaksi_url = req.file ? `/uploads/simaksi/${req.file.filename}` : null;
         const orderId = generateId();
 
         await connection.execute(
-            `INSERT INTO orders (id, user_id, mountain_name, days, people, total_price, simaksi_url, notes, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-            [orderId, req.user.id, mountain_name, parseInt(days), parseInt(people), parseFloat(total_price), simaksi_url, notes || '']
+            `INSERT INTO orders (id, user_id, mountain_name, days, people, total_price, simaksi_url, notes, status, delivery_method)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+            [orderId, req.user.id, mountain_name, parseInt(days), parseInt(people), parseFloat(total_price), simaksi_url, notes || '', delivery_method || 'pickup']
         );
 
         for (const item of parsedItems) {

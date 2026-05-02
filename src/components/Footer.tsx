@@ -27,7 +27,7 @@ export const Footer = () => (
         <div>
           <h4 className="mb-3 font-display text-sm font-bold">Kontak</h4>
           <div className="flex gap-3">
-            <a className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground" href="#"><Instagram className="h-4 w-4" /></a>
+            <a className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground" href="https://www.instagram.com/chrls.los/?hl=id"><Instagram className="h-4 w-4" /></a>
             <a className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground" href="#"><MessageCircle className="h-4 w-4" /></a>
             <a className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-smooth hover:bg-primary hover:text-primary-foreground" href="#"><Mail className="h-4 w-4" /></a>
           </div>

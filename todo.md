@@ -45,10 +45,14 @@ Berikut adalah ruang lingkup (scope) pengerjaan project **Campcer** (Sistem Peny
 - [x] **Manajemen Produk (CRUD)**: Fungsionalitas di UI Admin untuk menambah barang baru, mengedit harga/deskripsi, dan menghapus barang.
 - [x] **Manajemen Pesanan**: Fungsionalitas bagi Admin untuk mengubah status pesanan (`pending` ➔ `confirmed` ➔ `active` ➔ `returned`).
 - [x] **Manajemen Pengguna**: Admin bisa melihat detail pengguna dan riwayat transaksi mereka.
+- [x] **Manajemen Produk (CRUD)**: Pada tambah produk, produk bisa di input gambar, perjelas keterang saat tambah produk seperti lama sewa hari, harga, stok. Admin harus bisa tambah paket juga jangan hanya produk.
+- [x] **Manajemen Pengguna**: Admin bisa megedit data pengguna, seperti no telepon dan lainnya
+- [x] **Manajemen Produk** : Semua admin bisa ngelola produk, jangan satu admin saja
 
 ### 2. Fitur Pengguna (Riwayat Transaksi)
 - [x] **Halaman "Pesanan Saya"**: Membuat halaman di mana pengguna biasa bisa melihat status pesanan mereka (apakah sudah dikonfirmasi, sedang aktif, atau sudah selesai).
 - [x] **Profil Pengguna**: Halaman untuk mengganti password atau mengedit informasi kontak (no telepon).
+- [x] **Pesanan Pengguna**: Saat memesan pengguna memilih pengambilan alat sewa, mau ke tempat lokasi campcer/diantar kerumah
 
 ### 3. Paket Bundling (Packages)
 - [x] Saat ini daftar Paket Bundling (Paket Hemat) di Katalog masih di-hardcode dari frontend (`src/data/equipment.ts`). Harus dipindahkan ke database (mungkin butuh tabel `packages` atau kategori khusus di `products`) agar bisa diedit oleh Admin.
@@ -60,5 +64,6 @@ Berikut adalah ruang lingkup (scope) pengerjaan project **Campcer** (Sistem Peny
 - [x] Validasi stok barang: Memastikan pengguna tidak bisa menyewa barang yang kuantitasnya melebihi stok yang ada di database.
 - [x] Pengecekan ketersediaan tanggal: Memastikan barang tidak di-double booking pada tanggal yang sama. (Fitur lanjutan).
 
----
-*Catatan: Dokumen ini dibuat otomatis pada tanggal 1 Mei 2026. Tandai checkbox `[ ]` menjadi `[x]` saat Anda sudah menyelesaikan tugas tersebut.*
+### 6. Lain-lain
+- [x] **Sistem wajib Sewa** : User tidak wajib sewa, sistem hanya menyarankan paket/produk saja
+

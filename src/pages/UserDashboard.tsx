@@ -156,11 +156,18 @@ const UserDashboard = () => {
                   <div className="mb-4 text-sm">
                     <p><span className="font-semibold">Tujuan:</span> {o.mountain_name}</p>
                     <p><span className="font-semibold">Durasi:</span> {o.days} hari</p>
+                    <p className="mt-1"><span className="font-semibold text-destructive">Batas Pengembalian:</span> {new Date(new Date(o.created_at).getTime() + (o.days * 24 * 60 * 60 * 1000)).toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
                     <div className="mt-2 text-xs text-muted-foreground">
                       <p className="font-semibold text-foreground">Alat disewa:</p>
                       <ul className="list-inside list-disc">
                         {o.items?.map((item: any) => (
-                          <li key={item.id}>{item.quantity}x {item.product_name}</li>
+                          <li key={item.id} className="mb-1">
+                            <span className="font-medium text-foreground">{item.quantity}x {item.product_name}</span>
+                            <br />
+                            <span className="ml-4 text-muted-foreground">
+                              {formatIDR(item.price_per_day)}/hari × {o.days} hari = <span className="font-semibold text-foreground">{formatIDR(item.price_per_day * item.quantity * o.days)}</span>
+                            </span>
+                          </li>
                         ))}
                       </ul>
                     </div>

@@ -5,6 +5,7 @@ export interface CartItem {
   name: string;
   price_per_day: number;
   emoji: string;
+  image_url?: string;
   quantity: number;
 }
 
@@ -31,20 +32,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addToCart = (product: any) => {
+    const cartItemId = `${product.id}-${product.name}`;
     setItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find((item) => item.id === cartItemId);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
       return [
         ...prev,
         {
-          id: product.id,
+          id: cartItemId,
           name: product.name,
           price_per_day: product.price_per_day,
           emoji: product.emoji,
+          image_url: product.image_url,
           quantity: 1,
         },
       ];

@@ -3,7 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/context/CartContext";
 import { Navbar } from "@/components/Navbar";
-import { Upload, CheckCircle2, AlertTriangle, ArrowLeft, Trash2, Plus, Minus } from "lucide-react";
+import { Upload, CheckCircle2, AlertTriangle, ArrowLeft, Trash2, Plus, Minus, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatIDR } from "@/lib/risk-engine";
 
@@ -14,6 +14,10 @@ const CartCheckout = () => {
 
   const [days, setDays] = useState(1);
   const [mountainName, setMountainName] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState("pickup");
+  const [recipientName, setRecipientName] = useState(user?.full_name || "");
+  const [recipientPhone, setRecipientPhone] = useState(user?.phone || "");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [simaksiFile, setSimaksiFile] = useState<File | null>(null);
   const [simaksiPreview, setSimaksiPreview] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
@@ -44,19 +48,33 @@ const CartCheckout = () => {
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
-      
+
       if (simaksiFile) {
         formData.append("simaksi", simaksiFile);
       }
-      
+
       const destination = mountainName.trim() || "Sewa Bebas (Tanpa Spesifik Gunung)";
       const grandTotal = cartTotal * days;
-      
+
       formData.append("mountain_name", destination);
       formData.append("days", days.toString());
       formData.append("people", "1"); // Default untuk sewa alat
       formData.append("total_price", grandTotal.toString());
-      formData.append("notes", notes);
+
+      let finalNotes = notes;
+      if (deliveryMethod === 'delivery') {
+        if (!deliveryAddress || !recipientName || !recipientPhone) {
+          setSubmitting(false);
+          toast({ title: "Data tidak lengkap", description: "Mohon lengkapi alamat dan data penerima untuk pengiriman.", variant: "destructive" });
+          return;
+        }
+        finalNotes = `[PENGIRIMAN]\nPenerima: ${recipientName}\nNo. HP: ${recipientPhone}\nAlamat: ${deliveryAddress}\n\nCatatan Tambahan: ${notes}`;
+      } else {
+        finalNotes = `[AMBIL DI TOKO]\n\nCatatan Tambahan: ${notes}`;
+      }
+
+      formData.append("notes", finalNotes);
+      formData.append("delivery_method", deliveryMethod);
 
       const orderItems = items.map((it) => ({
         product_name: it.name,
@@ -138,9 +156,13 @@ const CartCheckout = () => {
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
-                        {item.emoji}
-                      </div>
+                      {item.image_url ? (
+                        <img src={`http://localhost:5000${item.image_url}`} alt={item.name} className="h-12 w-12 rounded-xl object-cover" />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
+                          <Package className="h-5 w-5" />
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-semibold">{item.name}</h4>
                         <p className="text-sm text-muted-foreground">{formatIDR(item.price_per_day)}/hari</p>
@@ -189,6 +211,47 @@ const CartCheckout = () => {
                     className="w-full rounded-xl border border-input bg-background px-4 py-2"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">Metode Pengambilan</label>
+                  <div className="flex gap-4">
+                    <label className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 font-semibold transition-smooth ${deliveryMethod === 'pickup' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-muted-foreground hover:bg-secondary'}`}>
+                      <input type="radio" name="delivery" value="pickup" checked={deliveryMethod === 'pickup'} onChange={() => setDeliveryMethod('pickup')} className="hidden" />
+                      🏬 Ambil di Toko
+                    </label>
+                    <label className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 font-semibold transition-smooth ${deliveryMethod === 'delivery' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-muted-foreground hover:bg-secondary'}`}>
+                      <input type="radio" name="delivery" value="delivery" checked={deliveryMethod === 'delivery'} onChange={() => setDeliveryMethod('delivery')} className="hidden" />
+                      🚚 Diantar ke Rumah
+                    </label>
+                  </div>
+                </div>
+
+                {deliveryMethod === 'pickup' && (
+                  <div className="sm:col-span-2 mt-2 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-primary">
+                    <span className="font-semibold block mb-1">📍 Lokasi Pengambilan (Toko Campcer):</span>
+                    Jl. Telekomunikasi No. 1, Terusan Buah Batu, Bojongsoang, Bandung.
+                    <br />Jam Operasional: 08:00 - 20:00 WIB.
+                  </div>
+                )}
+                {deliveryMethod === 'delivery' && (
+                  <div className="sm:col-span-2 mt-2 space-y-4 rounded-xl border border-border bg-secondary/20 p-4">
+                    <h3 className="font-semibold text-foreground border-b border-border pb-2">Informasi Pengiriman</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Penerima</label>
+                        <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Nama lengkap" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">No. Telepon Penerima</label>
+                        <input value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Contoh: 08123456789" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Alamat Lengkap</label>
+                        <textarea value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} rows={2} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Nama jalan, RT/RW, nomor rumah, patokan..." />
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground text-red-500 text-center">*Ongkir Ditanggung Penyewa*</label>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -256,7 +319,7 @@ const CartCheckout = () => {
                 <span className="font-bold">Total Pembayaran</span>
                 <span className="font-display text-xl font-extrabold text-primary">{formatIDR(cartTotal * days)}</span>
               </div>
-              
+
               <div className="mb-4 flex items-start gap-3 rounded-xl bg-accent/10 p-4 text-sm text-accent-foreground">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                 <p>Harga di atas adalah estimasi. Total final dan ongkir (jika ada) akan dikonfirmasi admin.</p>
