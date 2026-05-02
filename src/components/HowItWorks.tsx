@@ -3,7 +3,7 @@ import { ClipboardCheck, Calculator, Backpack, ShieldCheck } from "lucide-react"
 const STEPS = [
   { icon: ClipboardCheck, title: "Isi data pendakian", desc: "Pilih gunung tujuan, durasi, dan jumlah pendaki." },
   { icon: Calculator, title: "Hitung resiko otomatis", desc: "Sistem menganalisa grade gunung, suhu, & kondisi medan." },
-  { icon: Backpack, title: "Dapatkan rekomendasi", desc: "Daftar alat WAJIB sewa muncul lengkap dengan alasannya." },
+  { icon: Backpack, title: "Dapatkan rekomendasi", desc: "Daftar saran alat sewa muncul lengkap dengan alasannya." },
   { icon: ShieldCheck, title: "Sewa & mendaki aman", desc: "Pickup di outlet atau diantar. Pendakianmu lebih siap." },
 ];
 

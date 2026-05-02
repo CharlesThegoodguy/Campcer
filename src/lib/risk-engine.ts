@@ -74,7 +74,7 @@ export function recommend({ mountain, days, people }: TripInput): Recommendation
     quantity: tentsNeeded,
     mandatory: true,
     reason: mountain.conditions.includes("storm-prone")
-      ? "Wajib tenda anti badai karena gunung rawan badai."
+      ? "Disarankan tenda anti badai karena gunung rawan badai."
       : "Tenda standar cukup untuk kondisi umumnya.",
   });
 
@@ -92,7 +92,7 @@ export function recommend({ mountain, days, people }: TripInput): Recommendation
 
   // Thermal
   if (mountain.minTempC <= 5 || mountain.conditions.includes("alpine")) {
-    mandatory.push({ equipment: byId("thermal"), quantity: people, mandatory: true, reason: "Baselayer thermal wajib di suhu rendah." });
+    mandatory.push({ equipment: byId("thermal"), quantity: people, mandatory: true, reason: "Baselayer thermal disarankan di suhu rendah." });
     mandatory.push({ equipment: byId("gloves"), quantity: people, mandatory: true, reason: "Lindungi tangan dari hipotermia." });
   }
 
@@ -101,7 +101,7 @@ export function recommend({ mountain, days, people }: TripInput): Recommendation
   mandatory.push({ equipment: byId("nesting"), quantity: Math.max(1, Math.ceil(people / 4)), mandatory: true, reason: "Peralatan masak grup." });
 
   // Headlamp per person
-  mandatory.push({ equipment: byId("headlamp"), quantity: people, mandatory: true, reason: "Setiap pendaki wajib membawa headlamp." });
+  mandatory.push({ equipment: byId("headlamp"), quantity: people, mandatory: true, reason: "Setiap pendaki disarankan membawa headlamp." });
 
   // Carrier per person
   mandatory.push({
@@ -112,11 +112,11 @@ export function recommend({ mountain, days, people }: TripInput): Recommendation
   });
 
   // First aid
-  mandatory.push({ equipment: byId("first-aid"), quantity: 1, mandatory: true, reason: "P3K wajib untuk setiap grup." });
+  mandatory.push({ equipment: byId("first-aid"), quantity: 1, mandatory: true, reason: "P3K disarankan untuk setiap grup." });
 
   // Conditional safety
   if (mountain.conditions.includes("storm-prone") || mountain.grade >= 3) {
-    mandatory.push({ equipment: byId("rain-gear"), quantity: people, mandatory: true, reason: "Cuaca berubah cepat — jas hujan wajib." });
+    mandatory.push({ equipment: byId("rain-gear"), quantity: people, mandatory: true, reason: "Cuaca berubah cepat — jas hujan disarankan." });
   }
   if (mountain.conditions.includes("volcanic-gas")) {
     mandatory.push({ equipment: byId("gas-mask"), quantity: people, mandatory: true, reason: "Lindungi pernapasan dari gas vulkanik." });
@@ -126,7 +126,7 @@ export function recommend({ mountain, days, people }: TripInput): Recommendation
     suggested.push({ equipment: byId("gaiter"), quantity: people, mandatory: false, reason: "Cegah kerikil masuk sepatu." });
   }
   if (mountain.conditions.includes("water-scarce") || mountain.conditions.includes("jungle")) {
-    mandatory.push({ equipment: byId("water-filter"), quantity: 1, mandatory: true, reason: "Sumber air terbatas — filter wajib." });
+    mandatory.push({ equipment: byId("water-filter"), quantity: 1, mandatory: true, reason: "Sumber air terbatas — filter disarankan." });
   }
   if (mountain.conditions.includes("jungle") || mountain.grade >= 4) {
     suggested.push({ equipment: byId("gps"), quantity: 1, mandatory: false, reason: "GPS sangat membantu di jalur kompleks." });

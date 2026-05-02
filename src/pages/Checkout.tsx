@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { MOUNTAINS } from "@/data/mountains";
 import { recommend, formatIDR } from "@/lib/risk-engine";
 import { Navbar } from "@/components/Navbar";
-import { ArrowLeft, ShoppingCart, Info } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Info, CheckSquare, Square } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
 
@@ -27,13 +27,27 @@ const Checkout = () => {
   const { addToCart } = useCart();
   const [adding, setAdding] = useState(false);
 
+  const allRecommendedItems = useMemo(() => [...result.mandatory, ...result.suggested], [result]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(allRecommendedItems.map(it => it.equipment.id)));
+
+  useEffect(() => {
+    setSelectedIds(new Set(allRecommendedItems.map(it => it.equipment.id)));
+  }, [allRecommendedItems]);
+
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const selectedItems = allRecommendedItems.filter(it => selectedIds.has(it.equipment.id));
+  const estimatedTotal = selectedItems.reduce((acc, it) => acc + (it.equipment.pricePerDay * it.quantity * days), 0);
+
   const handleAddAllToCart = () => {
     setAdding(true);
-    const allItems = [...result.mandatory, ...result.suggested];
     
-    // We map hardcoded Risk Engine items to the format expected by the Cart.
-    // The cart uses standard product format, but the risk engine output has `equipment`
-    allItems.forEach(it => {
+    selectedItems.forEach(it => {
       // Simulate adding to cart multiple times if quantity > 1
       for(let i=0; i<it.quantity; i++) {
         addToCart({
@@ -45,7 +59,7 @@ const Checkout = () => {
       }
     });
 
-    toast({ title: "Berhasil", description: "Semua rekomendasi alat ditambahkan ke keranjang." });
+    toast({ title: "Berhasil", description: `${selectedItems.length} rekomendasi alat ditambahkan ke keranjang.` });
     setTimeout(() => {
       navigate('/cart-checkout');
     }, 500);
@@ -82,14 +96,17 @@ const Checkout = () => {
               </div>
 
               <div className="space-y-2">
-                {[...result.mandatory, ...result.suggested].map((it, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-xl bg-background p-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span>{it.equipment.emoji}</span>
-                      <span className="font-medium">{it.equipment.name}</span>
+                {allRecommendedItems.map((it, i) => (
+                  <div key={i} className={`flex items-center justify-between rounded-xl border p-3 text-sm transition-colors ${selectedIds.has(it.equipment.id) ? 'border-primary/30 bg-primary/5' : 'border-border bg-background opacity-60'}`}>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => toggleSelection(it.equipment.id)} className="text-primary hover:text-primary/80 transition-colors">
+                        {selectedIds.has(it.equipment.id) ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-muted-foreground" />}
+                      </button>
+                      <span className="text-xl">{it.equipment.emoji}</span>
+                      <span className={`font-medium ${!selectedIds.has(it.equipment.id) && 'line-through text-muted-foreground'}`}>{it.equipment.name}</span>
                       <span className="text-muted-foreground">×{it.quantity}</span>
                     </div>
-                    <span className="font-semibold text-primary">
+                    <span className={`font-semibold ${selectedIds.has(it.equipment.id) ? 'text-primary' : 'text-muted-foreground line-through'}`}>
                       {formatIDR(it.equipment.pricePerDay * it.quantity * days)}
                     </span>
                   </div>
@@ -97,8 +114,8 @@ const Checkout = () => {
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                <span className="font-display text-lg font-bold">Total</span>
-                <span className="font-display text-2xl font-extrabold text-primary">{formatIDR(result.estimatedCost)}</span>
+                <span className="font-display text-lg font-bold">Total Terpilih</span>
+                <span className="font-display text-2xl font-extrabold text-primary">{formatIDR(estimatedTotal)}</span>
               </div>
             </div>
           </div>
@@ -108,22 +125,22 @@ const Checkout = () => {
             <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 shadow-card-soft">
               <div className="mb-3 flex items-center gap-2 text-primary">
                 <Info className="h-5 w-5" />
-                <h3 className="font-display text-lg font-bold">Sistem Tidak Mewajibkan Sewa</h3>
+                <h3 className="font-display text-lg font-bold">Sistem Hanya Menyarankan Sewa</h3>
               </div>
               <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
                 Hasil perhitungan ini hanyalah <span className="font-semibold text-foreground">Rekomendasi Sistem (Trip Planner)</span> untuk keamanan pendakian Anda di {mountain.name}. Anda bebas untuk mengurangi, menambah, atau tidak menyewa alat sama sekali jika sudah memiliki alat sendiri.
               </p>
               <p className="text-sm text-muted-foreground">
-                Jika Anda ingin menyewa, Anda dapat memasukkan semua rekomendasi ini ke keranjang, lalu mengaturnya kembali (menghapus yang tidak perlu) sebelum melakukan checkout akhir.
+                Silakan hilangkan centang (uncheck) pada alat yang sudah Anda miliki atau tidak ingin Anda sewa, lalu klik tombol di bawah untuk menambahkannya ke keranjang.
               </p>
             </div>
 
             <button
-              onClick={handleAddAllToCart} disabled={adding}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-elegant transition-smooth hover:bg-primary/90 disabled:opacity-50"
+              onClick={handleAddAllToCart} disabled={adding || selectedItems.length === 0}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-elegant transition-smooth hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart className="h-5 w-5" />
-              {adding ? "Menambahkan..." : "Tambahkan Semua ke Keranjang"}
+              {adding ? "Menambahkan..." : `Tambahkan Terpilih (${selectedItems.length}) ke Keranjang`}
             </button>
             <Link to="/#catalog" className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-sm font-bold text-secondary-foreground shadow-sm transition-smooth hover:bg-secondary/80">
               Lihat Katalog Sendiri

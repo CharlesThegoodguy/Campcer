@@ -31,7 +31,7 @@ export const EQUIPMENT: Equipment[] = [
   // Sleep
   { id: "sb-basic", name: "Sleeping Bag Polar", category: "sleep", tier: "basic", pricePerDay: 15000, emoji: "🛏️", description: "Comfort 15°C. Untuk gunung di bawah 2500m.", tags: [] },
   { id: "sb-standard", name: "Sleeping Bag Hollow Fiber", category: "sleep", tier: "standard", pricePerDay: 25000, emoji: "🛌", description: "Comfort 5°C. Cukup untuk Grade II-III.", tags: ["cold"] },
-  { id: "sb-down", name: "Sleeping Bag Bulu Angsa", category: "sleep", tier: "premium", pricePerDay: 50000, emoji: "🪶", description: "Comfort -5°C. Wajib untuk gunung dingin/alpine.", tags: ["cold", "alpine"] },
+  { id: "sb-down", name: "Sleeping Bag Bulu Angsa", category: "sleep", tier: "premium", pricePerDay: 50000, emoji: "🪶", description: "Comfort -5°C. Disarankan untuk gunung dingin/alpine.", tags: ["cold", "alpine"] },
   { id: "thermal", name: "Baselayer Thermal Set", category: "apparel", tier: "standard", pricePerDay: 20000, emoji: "🧥", description: "Pakaian dalam thermal, tahan dingin ekstrem.", tags: ["cold", "alpine"] },
   { id: "matras", name: "Matras Aluminium Foil", category: "sleep", tier: "basic", pricePerDay: 8000, emoji: "🟫", description: "Alas tidur, isolasi panas tubuh.", tags: [] },
 
@@ -41,12 +41,12 @@ export const EQUIPMENT: Equipment[] = [
   { id: "water-filter", name: "Water Filter Portable", category: "safety", tier: "standard", pricePerDay: 25000, emoji: "💧", description: "Filter air sungai/danau menjadi layak minum.", tags: ["water-scarce", "jungle"] },
 
   // Navigation & Lighting
-  { id: "headlamp", name: "Headlamp 300 Lumen", category: "lighting", tier: "basic", pricePerDay: 10000, emoji: "🔦", description: "Lampu kepala wajib untuk summit attack.", tags: [] },
+  { id: "headlamp", name: "Headlamp 300 Lumen", category: "lighting", tier: "basic", pricePerDay: 10000, emoji: "🔦", description: "Lampu kepala disarankan untuk summit attack.", tags: [] },
   { id: "gps", name: "GPS + Peta Topografi", category: "navigation", tier: "premium", pricePerDay: 40000, emoji: "🧭", description: "GPS handheld, esensial di hutan lebat/jalur tidak jelas.", tags: ["jungle", "alpine"] },
 
   // Safety
   { id: "first-aid", name: "First Aid Kit Lengkap", category: "safety", tier: "standard", pricePerDay: 15000, emoji: "🩹", description: "P3K lengkap termasuk obat ketinggian.", tags: [] },
-  { id: "gas-mask", name: "Masker Anti Gas Vulkanik", category: "safety", tier: "standard", pricePerDay: 20000, emoji: "😷", description: "Masker N95+ filter gas SO₂. Wajib gunung aktif.", tags: ["volcanic-gas"] },
+  { id: "gas-mask", name: "Masker Anti Gas Vulkanik", category: "safety", tier: "standard", pricePerDay: 20000, emoji: "😷", description: "Masker N95+ filter gas SO₂. Disarankan gunung aktif.", tags: ["volcanic-gas"] },
   { id: "rain-gear", name: "Jas Hujan Setelan", category: "apparel", tier: "standard", pricePerDay: 12000, emoji: "🧥", description: "Jaket + celana waterproof.", tags: ["storm-prone"] },
   { id: "trekking-pole", name: "Trekking Pole Sepasang", category: "safety", tier: "standard", pricePerDay: 18000, emoji: "🥾", description: "Bantu jalur scree & turunan curam.", tags: ["scree"] },
   { id: "gaiter", name: "Gaiter (Pelindung Kaki)", category: "apparel", tier: "basic", pricePerDay: 10000, emoji: "🦵", description: "Cegah pasir/kerikil masuk sepatu.", tags: ["scree"] },

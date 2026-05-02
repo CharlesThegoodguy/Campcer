@@ -31,7 +31,7 @@ export const TripPlanner = () => {
           </h2>
           <p className="mt-4 text-muted-foreground">
             Isi gunung tujuan, durasi, dan jumlah pendaki. Sistem akan menghitung resiko dan
-            menyarankan alat wajib yang harus disewa.
+            menyarankan alat yang sebaiknya disewa.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ export const TripPlanner = () => {
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ListChecks className="h-5 w-5 text-primary" />
-                  <h3 className="font-display text-xl font-bold">Alat WAJIB Disewa</h3>
+                  <h3 className="font-display text-xl font-bold">Saran Alat Disewa</h3>
                 </div>
                 <span className="rounded-full bg-danger/10 px-3 py-1 text-xs font-semibold text-danger">
                   {result.mandatory.length} item
@@ -173,7 +173,7 @@ export const TripPlanner = () => {
                   Untuk {people} orang × {days} hari
                 </div>
               </div>
-              <CheckoutButton mountainId={mountainId} days={days} people={people} />
+              <CheckoutButton mountainId={mountainId} days={days} people={people} totalItems={result.mandatory.length + result.suggested.length} />
             </div>
           </div>
         </div>
@@ -212,11 +212,12 @@ const ItemRow = ({ item, days }: { item: ReturnType<typeof recommend>["mandatory
   </div>
 );
 
-const CheckoutButton = ({ mountainId, days, people }: { mountainId: string; days: number; people: number }) => {
+const CheckoutButton = ({ mountainId, days, people, totalItems }: { mountainId: string; days: number; people: number; totalItems: number }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleClick = () => {
+    if (totalItems === 0) return;
     if (!user) {
       navigate("/login");
       return;
@@ -225,7 +226,7 @@ const CheckoutButton = ({ mountainId, days, people }: { mountainId: string; days
   };
 
   return (
-    <button onClick={handleClick} className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-glow transition-smooth hover:scale-[1.02]">
+    <button onClick={handleClick} disabled={totalItems === 0} className={`rounded-full px-6 py-3 text-sm font-bold shadow-glow transition-smooth hover:scale-[1.02] ${totalItems === 0 ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' : 'bg-accent text-accent-foreground'}`}>
       {user ? "Lanjut Sewa Paket Ini" : "Login untuk Sewa"}
     </button>
   );

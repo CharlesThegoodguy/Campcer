@@ -26,7 +26,7 @@ export const Hero = () => (
           <span className="text-accent">sesuai resiko</span> gunungmu.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-white/85 sm:text-xl">
-          CAMPCER menghitung resiko gunung tujuanmu, lalu menyarankan alat wajib yang harus disewa.
+          CAMPCER menghitung resiko gunung tujuanmu, lalu menyarankan alat yang sebaiknya disewa.
           Khusus untuk pendaki pemula yang ingin naik gunung dengan persiapan matang.
         </p>
         <div className="mt-10 flex flex-wrap gap-4">

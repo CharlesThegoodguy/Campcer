@@ -44,6 +44,11 @@ const CartCheckout = () => {
       return;
     }
 
+    if (!simaksiFile) {
+      toast({ title: "SIMAKSI Wajib", description: "Mohon unggah bukti SIMAKSI terlebih dahulu.", variant: "destructive" });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
@@ -255,14 +260,14 @@ const CartCheckout = () => {
               </div>
             </div>
 
-            {/* Optional SIMAKSI */}
+            {/* Wajib SIMAKSI */}
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4">
                 <h2 className="font-display text-xl font-bold flex items-center gap-2">
-                  Bukti SIMAKSI <span className="text-xs font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Opsional</span>
+                  Bukti SIMAKSI <span className="text-xs font-normal text-white bg-danger px-2 py-0.5 rounded-full">Wajib</span>
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Jika Anda mendaki gunung yang memerlukan tiket/SIMAKSI, mohon lampirkan di sini untuk pendataan kami.
+                  Mohon lampirkan bukti tiket atau SIMAKSI gunung tujuan Anda di sini untuk pendataan kami.
                 </p>
               </div>
               <label className="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 p-8 text-center transition-smooth hover:bg-secondary/50">

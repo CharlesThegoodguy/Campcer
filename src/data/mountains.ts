@@ -130,7 +130,7 @@ export const MOUNTAINS: Mountain[] = [
     grade: 3,
     minTempC: 4,
     conditions: ["cold", "windy", "scree"],
-    notes: "Tanjakan curam terus menerus, fisik wajib prima.",
+    notes: "Tanjakan curam terus menerus, fisik disarankan prima.",
   },
 ];
 
@@ -138,6 +138,6 @@ export const GRADE_INFO: Record<MountainGrade, { label: string; color: string; d
   1: { label: "GRADE I", color: "grade-1", description: "Pemula. Trek singkat, jalur jelas, resiko rendah." },
   2: { label: "GRADE II", color: "grade-2", description: "Mudah. Cocok untuk pendaki baru dengan pendamping." },
   3: { label: "GRADE III", color: "grade-3", description: "Menengah. Butuh fisik baik & alat memadai." },
-  4: { label: "GRADE IV", color: "grade-4", description: "Sulit. Resiko tinggi, alat lengkap & pengalaman wajib." },
+  4: { label: "GRADE IV", color: "grade-4", description: "Sulit. Resiko tinggi, alat lengkap & pengalaman disarankan." },
   5: { label: "GRADE V", color: "grade-5", description: "Ekstrem. Hanya untuk pendaki berpengalaman." },
 };
