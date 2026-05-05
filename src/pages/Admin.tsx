@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const API = "http://localhost:5000/api";
 
-type Tab = "products" | "orders" | "users";
+type Tab = "products" | "orders" | "users" | "mountains";
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -17,13 +17,29 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [mountains, setMountains] = useState<any[]>([]);
   const [simaksiModal, setSimaksiModal] = useState<{ url: string, type: 'SIMAKSI' | 'Transfer' } | null>(null);
 
   const [showProductForm, setShowProductForm] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [pForm, setPForm] = useState({ name: "", description: "", emoji: "🏕️", category: "shelter", price_per_day: 0, stock: 0, sizes: "" });
   const [pImage, setPImage] = useState<File | null>(null);
-  const [sizeList, setSizeList] = useState<{size: string, stock: number}[]>([]);
+  const [sizeList, setSizeList] = useState<{ size: string, stock: number }[]>([]);
+
+  const [showMountainForm, setShowMountainForm] = useState(false);
+  const [editMountain, setEditMountain] = useState<any>(null);
+  const [mForm, setMForm] = useState({ name: "", region: "", elevation: 0, grade: 1, minTempC: 0, conditionsStr: "", notes: "" });
+
+  const openMountainForm = (m: any = null) => {
+    if (m) {
+      setEditMountain(m);
+      setMForm({ ...m, conditionsStr: (m.conditions || []).join(", ") });
+    } else {
+      setEditMountain(null);
+      setMForm({ name: "", region: "", elevation: 0, grade: 1, minTempC: 0, conditionsStr: "", notes: "" });
+    }
+    setShowMountainForm(true);
+  };
 
   const openProductForm = (p: any = null) => {
     if (p) {
@@ -67,15 +83,17 @@ const Admin = () => {
 
   const fetchData = async () => {
     try {
-      const [oRes, pRes, uRes] = await Promise.all([
+      const [oRes, pRes, uRes, mRes] = await Promise.all([
         fetch(`${API}/admin/orders`, { headers: { Authorization: `Bearer ${token()}` } }),
         fetch(`${API}/admin/products`, { headers: { Authorization: `Bearer ${token()}` } }),
         fetch(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch(`${API}/mountains`),
       ]);
-      const [o, p, u] = await Promise.all([oRes.json(), pRes.json(), uRes.json()]);
+      const [o, p, u, m] = await Promise.all([oRes.json(), pRes.json(), uRes.json(), mRes.json()]);
       if (oRes.ok) setOrders(o.orders);
       if (pRes.ok) setProducts(p.products);
       if (uRes.ok) setProfiles(u.users);
+      if (mRes.ok) setMountains(m.mountains);
     } catch (err) {
       console.error("Failed to fetch admin data", err);
     }
@@ -101,7 +119,7 @@ const Admin = () => {
       const formData = new FormData();
       const finalStock = sizeList.length > 0 ? totalSizeStock : pForm.stock;
       const finalSizes = sizeList.length > 0 ? JSON.stringify(sizeList) : "";
-      
+
       Object.entries({ ...pForm, stock: finalStock, sizes: finalSizes }).forEach(([key, value]) => formData.append(key, String(value)));
       if (pImage) formData.append("image", pImage);
 
@@ -150,6 +168,50 @@ const Admin = () => {
     }
   };
 
+  const saveMountain = async () => {
+    if (!mForm.name.trim()) {
+      toast({ title: "Nama Gunung tidak boleh kosong", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const payload = {
+        ...mForm,
+        conditions: mForm.conditionsStr.split(',').map(s => s.trim()).filter(Boolean)
+      };
+
+      const method = editMountain ? "PUT" : "POST";
+      const url = editMountain ? `${API}/admin/mountains/${editMountain.id}` : `${API}/admin/mountains`;
+      const res = await fetch(url, { 
+        method, 
+        headers: authHeader(), 
+        body: JSON.stringify(payload) 
+      });
+      if (!res.ok) throw new Error("Gagal");
+      setShowMountainForm(false);
+      setEditMountain(null);
+      fetchData();
+      toast({ title: editMountain ? "Gunung diperbarui" : "Gunung ditambahkan" });
+    } catch {
+      toast({ title: "Gagal menyimpan gunung", variant: "destructive" });
+    }
+  };
+
+  const deleteMountain = async (id: string) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus gunung ini?")) return;
+    try {
+      const res = await fetch(`${API}/admin/mountains/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) throw new Error("Gagal hapus di server");
+      fetchData();
+      toast({ title: "Gunung dihapus" });
+    } catch (err: any) {
+      toast({ title: "Gagal hapus gunung", description: err.message, variant: "destructive" });
+    }
+  };
+
   if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/login" replace />;
 
@@ -157,6 +219,7 @@ const Admin = () => {
     { key: "orders", label: "Pesanan", icon: FileCheck, count: orders.length },
     { key: "products", label: "Produk", icon: Package, count: products.length },
     { key: "users", label: "Users", icon: Users, count: profiles.length },
+    { key: "mountains", label: "Gunung", icon: ArrowLeft, count: mountains.length },
   ];
 
   return (
@@ -173,7 +236,7 @@ const Admin = () => {
           {tabs.map((t) => (
             <button
               key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-smooth ${tab === t.key ? "bg-primary text-primary-foreground shadow-elegant" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              className={`flex items-center gap-4 rounded-full px-4 py-2 text-sm font-semibold transition-smooth ${tab === t.key ? "bg-primary text-primary-foreground shadow-elegant" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 }`}
             >
               <t.icon className="h-4 w-4" /> {t.label} <span className="ml-1 rounded-full bg-background/20 px-2 py-0.5 text-xs">{t.count}</span>
@@ -286,7 +349,7 @@ const Admin = () => {
                     <label className="mb-1 text-xs font-semibold text-muted-foreground">Nama Produk / Paket</label>
                     <input placeholder="Contoh: Tenda Dome 4P" value={pForm.name} onChange={(e) => setPForm({ ...pForm, name: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
                   </div>
-                  
+
                   <div className="flex flex-col">
                     <label className="mb-1 text-xs font-semibold text-muted-foreground">Emoji (Sebagai ikon alternatif)</label>
                     <input placeholder="Contoh: ⛺" value={pForm.emoji} onChange={(e) => setPForm({ ...pForm, emoji: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
@@ -367,7 +430,7 @@ const Admin = () => {
                       )}
                       <div>
                         <p className="font-semibold">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatIDR(p.price_per_day)}/hari · Stok: {p.stock} 
+                        <p className="text-xs text-muted-foreground">{formatIDR(p.price_per_day)}/hari · Stok: {p.stock}
                           {p.sizes && p.sizes !== "[]" && ` · Varian: ${(() => { try { return JSON.parse(p.sizes).length; } catch { return 0; } })()} ukuran`}
                         </p>
                       </div>
@@ -422,6 +485,80 @@ const Admin = () => {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Mountains Tab */}
+        {tab === "mountains" && (
+          <div>
+            <button
+              onClick={() => openMountainForm(null)}
+              className="mb-4 flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-elegant"
+            >
+              <Plus className="h-4 w-4" /> Tambah Gunung
+            </button>
+
+            {showMountainForm && (
+              <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-card-soft">
+                <h3 className="mb-4 font-display text-lg font-bold">{editMountain ? "Edit" : "Tambah"} Gunung</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Nama Gunung</label>
+                    <input placeholder="Contoh: Gunung Semeru" value={mForm.name} onChange={(e) => setMForm({ ...mForm, name: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Region (Lokasi)</label>
+                    <input placeholder="Contoh: Jawa Timur" value={mForm.region} onChange={(e) => setMForm({ ...mForm, region: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Ketinggian (mdpl)</label>
+                    <input type="number" value={mForm.elevation} onChange={(e) => setMForm({ ...mForm, elevation: +e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Grade Kesulitan (1-5)</label>
+                    <input type="number" min={1} max={5} value={mForm.grade} onChange={(e) => setMForm({ ...mForm, grade: +e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Suhu Minimum (°C)</label>
+                    <input type="number" value={mForm.minTempC} onChange={(e) => setMForm({ ...mForm, minTempC: +e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Kondisi (pisahkan dengan koma)</label>
+                    <input placeholder="Contoh: cold, windy, alpine" value={mForm.conditionsStr} onChange={(e) => setMForm({ ...mForm, conditionsStr: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                  <div className="flex flex-col sm:col-span-2">
+                    <label className="mb-1 text-xs font-semibold text-muted-foreground">Catatan / Deskripsi Singkat</label>
+                    <input placeholder="Contoh: Jalur berbatu dan rawan badai..." value={mForm.notes} onChange={(e) => setMForm({ ...mForm, notes: e.target.value })} className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button onClick={saveMountain} className="rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground">Simpan</button>
+                  <button onClick={() => { setShowMountainForm(false); setEditMountain(null); }} className="rounded-xl bg-secondary px-6 py-2 text-sm font-semibold text-secondary-foreground">Batal</button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {mountains.map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-card-soft">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-xl">⛰️</span>
+                    <div>
+                      <p className="font-semibold">{m.name} <span className="text-xs font-normal text-muted-foreground">({m.elevation}m)</span></p>
+                      <p className="text-xs text-muted-foreground">{m.region} · Grade: {m.grade} · {m.minTempC}°C</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => openMountainForm(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => deleteMountain(m.id)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

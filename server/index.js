@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import ordersRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import productsRoutes from './routes/products.js';
+import mountainsRoutes from './routes/mountains.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/mountains', mountainsRoutes);
 
 const PORT = 5000;
 app.listen(PORT, () => {

@@ -202,4 +202,51 @@ router.delete('/products/:id', async (req, res) => {
     }
 });
 
+// --- MOUNTAINS CRUD ---
+
+// POST /api/admin/mountains
+router.post('/mountains', async (req, res) => {
+    const { name, region, elevation, grade, minTempC, conditions, notes } = req.body;
+    if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Nama gunung tidak boleh kosong' });
+    }
+    try {
+        const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        await db.execute(
+            'INSERT INTO mountains (id, name, region, elevation, grade, minTempC, conditions, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, name, region, elevation, grade, minTempC, JSON.stringify(conditions || []), notes || '']
+        );
+        res.status(201).json({ message: 'Gunung berhasil ditambahkan' });
+    } catch (err) {
+        console.error('[ADMIN MOUNTAINS POST ERROR]', err.message);
+        res.status(500).json({ error: 'Gagal menambahkan gunung' });
+    }
+});
+
+// PUT /api/admin/mountains/:id
+router.put('/mountains/:id', async (req, res) => {
+    const { name, region, elevation, grade, minTempC, conditions, notes } = req.body;
+    try {
+        await db.execute(
+            'UPDATE mountains SET name=?, region=?, elevation=?, grade=?, minTempC=?, conditions=?, notes=? WHERE id=?',
+            [name, region, elevation, grade, minTempC, JSON.stringify(conditions || []), notes || '', req.params.id]
+        );
+        res.json({ message: 'Gunung berhasil diperbarui' });
+    } catch (err) {
+        console.error('[ADMIN MOUNTAINS PUT ERROR]', err.message);
+        res.status(500).json({ error: 'Gagal memperbarui gunung' });
+    }
+});
+
+// DELETE /api/admin/mountains/:id
+router.delete('/mountains/:id', async (req, res) => {
+    try {
+        await db.execute('DELETE FROM mountains WHERE id = ?', [req.params.id]);
+        res.json({ message: 'Gunung berhasil dihapus' });
+    } catch (err) {
+        console.error('[ADMIN MOUNTAINS DELETE ERROR]', err.message);
+        res.status(500).json({ error: 'Gagal menghapus gunung' });
+    }
+});
+
 export default router;

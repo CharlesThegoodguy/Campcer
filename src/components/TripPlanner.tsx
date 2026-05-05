@@ -1,23 +1,50 @@
-import { Mountain, MOUNTAINS, GRADE_INFO } from "@/data/mountains";
+import { Mountain, GRADE_INFO } from "@/data/mountains";
 import { recommend, formatIDR, Recommendation } from "@/lib/risk-engine";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, CheckCircle2, Info, Users, Calendar, MapPin, Sparkles, ListChecks } from "lucide-react";
 
 export const TripPlanner = () => {
-  const [mountainId, setMountainId] = useState<string>("semeru");
+  const [mountains, setMountains] = useState<Mountain[]>([]);
+  const [mountainId, setMountainId] = useState<string>("");
   const [days, setDays] = useState(3);
   const [people, setPeople] = useState(5);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const mountain = MOUNTAINS.find((m) => m.id === mountainId)!;
-  const result: Recommendation = useMemo(
-    () => recommend({ mountain, days, people }),
+  useEffect(() => {
+    fetch("http://localhost:5000/api/mountains")
+      .then(res => res.json())
+      .then(data => {
+        setMountains(data.mountains);
+        if (data.mountains.length > 0) {
+          setMountainId(data.mountains[0].id);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const mountain = useMemo(() => mountains.find((m) => m.id === mountainId), [mountains, mountainId]);
+  
+  const result: Recommendation | null = useMemo(
+    () => mountain ? recommend({ mountain, days, people }) : null,
     [mountain, days, people],
   );
 
-  const grade = GRADE_INFO[mountain.grade];
+  const grade = mountain ? GRADE_INFO[mountain.grade] : null;
+
+  if (loading) {
+    return <div className="py-24 text-center">Memuat data Trip Planner...</div>;
+  }
+
+  if (!mountain || !result || !grade) {
+    return <div className="py-24 text-center">Data Gunung Kosong. Tambahkan dari Admin.</div>;
+  }
 
   return (
     <section id="planner" className="bg-gradient-soft py-24">
@@ -45,7 +72,7 @@ export const TripPlanner = () => {
                   onChange={(e) => { setMountainId(e.target.value); setSubmitted(false); }}
                   className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium outline-none transition-smooth focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
-                  {MOUNTAINS.map((m) => (
+                  {mountains.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name} — {m.region} ({m.elevation}m)
                     </option>

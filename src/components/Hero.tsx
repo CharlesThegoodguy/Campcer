@@ -1,7 +1,22 @@
 import heroImg from "@/assets/hero-mountain.jpg";
 import { ArrowRight, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export const Hero = () => (
+export const Hero = () => {
+  const [mountainCount, setMountainCount] = useState<number>(12);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/mountains")
+      .then(res => res.json())
+      .then(data => {
+        if (data.mountains) {
+          setMountainCount(data.mountains.length);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  return (
   <section className="relative overflow-hidden">
     <div className="absolute inset-0">
       <img
@@ -47,7 +62,7 @@ export const Hero = () => (
 
         <div className="mt-16 grid max-w-xl grid-cols-3 gap-6 text-left">
           <div>
-            <div className="font-display text-3xl font-bold">12+</div>
+            <div className="font-display text-3xl font-bold">{mountainCount}+</div>
             <div className="text-sm text-white/70">Gunung tercover</div>
           </div>
           <div>
@@ -62,4 +77,5 @@ export const Hero = () => (
       </div>
     </div>
   </section>
-);
+  );
+};

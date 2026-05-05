@@ -48,6 +48,7 @@ Berikut adalah ruang lingkup (scope) pengerjaan project **Campcer** (Sistem Peny
 - [x] **Manajemen Produk (CRUD)**: Pada tambah produk, produk bisa di input gambar, perjelas keterang saat tambah produk seperti lama sewa hari, harga, stok. Admin harus bisa tambah paket juga jangan hanya produk.
 - [x] **Manajemen Pengguna**: Admin bisa megedit data pengguna, seperti no telepon dan lainnya
 - [x] **Manajemen Produk** : Semua admin bisa ngelola produk, jangan satu admin saja
+- [x] **Manajemen Gunung (CRUD)**: Admin bisa menambah, mengedit, dan menghapus data gunung (beserta atribut cuaca/grade untuk Trip Planner).
 
 ### 2. Fitur Pengguna (Riwayat Transaksi)
 - [x] **Halaman "Pesanan Saya"**: Membuat halaman di mana pengguna biasa bisa melihat status pesanan mereka (apakah sudah dikonfirmasi, sedang aktif, atau sudah selesai).

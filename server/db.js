@@ -124,6 +124,20 @@ async function runMigrations() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
+        // Buat tabel mountains
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS mountains (
+                id           VARCHAR(36) PRIMARY KEY,
+                name         VARCHAR(255) NOT NULL,
+                region       VARCHAR(255) NOT NULL,
+                elevation    INT NOT NULL,
+                grade        INT NOT NULL,
+                minTempC     INT NOT NULL,
+                conditions   JSON NOT NULL,
+                notes        TEXT NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
         // Seed Akun Admin
         const [admins] = await conn.execute("SELECT id FROM users WHERE email = 'admin@campcer.com'");
         if (admins.length === 0) {
@@ -192,6 +206,34 @@ async function runMigrations() {
                 );
             }
             console.log('[DB] ✅ 25 Produk & Paket default berhasil ditambahkan (Stok 10)');
+        }
+
+        // Seed Mountains if empty
+        const [existingMountains] = await conn.execute("SELECT id FROM mountains LIMIT 1");
+        if (existingMountains.length === 0) {
+            console.log('[DB] ⛰️ Seeding mountains...');
+            const seedMountains = [
+                { id: "semeru", name: "Gunung Semeru", region: "Jawa Timur", elevation: 3676, grade: 4, minTempC: 0, conditions: ["cold", "windy", "storm-prone", "scree", "alpine", "volcanic-gas"], notes: "Gunung tertinggi di Jawa. Suhu bisa mencapai 0°C." },
+                { id: "rinjani", name: "Gunung Rinjani", region: "Nusa Tenggara Barat", elevation: 3726, grade: 4, minTempC: 2, conditions: ["cold", "windy", "scree", "alpine", "water-scarce"], notes: "Trek panjang 3-4 hari, jalur berpasir curam menuju puncak." },
+                { id: "kerinci", name: "Gunung Kerinci", region: "Jambi", elevation: 3805, grade: 5, minTempC: -2, conditions: ["cold", "windy", "storm-prone", "alpine", "jungle", "volcanic-gas"], notes: "Tertinggi di Sumatra. Cuaca ekstrem, hutan lebat, gas vulkanik aktif." },
+                { id: "merbabu", name: "Gunung Merbabu", region: "Jawa Tengah", elevation: 3145, grade: 3, minTempC: 5, conditions: ["cold", "windy", "water-scarce"], notes: "Sabana terbuka, angin kencang, sumber air terbatas." },
+                { id: "merapi", name: "Gunung Merapi", region: "Yogyakarta", elevation: 2930, grade: 4, minTempC: 8, conditions: ["scree", "volcanic-gas", "windy"], notes: "Aktif. Jalur pasir & batuan lepas, summit attack dini hari." },
+                { id: "gede", name: "Gunung Gede", region: "Jawa Barat", elevation: 2958, grade: 2, minTempC: 8, conditions: ["cold", "jungle"], notes: "Cocok untuk pendaki pemula, jalur jelas & banyak sumber air." },
+                { id: "prau", name: "Gunung Prau", region: "Jawa Tengah", elevation: 2590, grade: 1, minTempC: 5, conditions: ["cold", "windy"], notes: "Pendakian singkat, ramah pemula, golden sunrise terbaik." },
+                { id: "papandayan", name: "Gunung Papandayan", region: "Jawa Barat", elevation: 2665, grade: 1, minTempC: 8, conditions: ["volcanic-gas"], notes: "Family friendly, jalur pendek, kawah aktif." },
+                { id: "lawu", name: "Gunung Lawu", region: "Jawa Tengah/Timur", elevation: 3265, grade: 3, minTempC: 3, conditions: ["cold", "windy", "alpine"], notes: "Suhu bisa sangat dingin, jalur panjang." },
+                { id: "slamet", name: "Gunung Slamet", region: "Jawa Tengah", elevation: 3428, grade: 4, minTempC: 2, conditions: ["cold", "windy", "scree", "water-scarce", "alpine"], notes: "Jalur scree panjang, sumber air sangat terbatas di atas pos 5." },
+                { id: "sindoro", name: "Gunung Sindoro", region: "Jawa Tengah", elevation: 3153, grade: 3, minTempC: 5, conditions: ["cold", "windy", "scree", "volcanic-gas"], notes: "Jalur terbuka, terkena angin langsung, kawah berbahaya." },
+                { id: "sumbing", name: "Gunung Sumbing", region: "Jawa Tengah", elevation: 3371, grade: 3, minTempC: 4, conditions: ["cold", "windy", "scree"], notes: "Tanjakan curam terus menerus, fisik disarankan prima." },
+            ];
+
+            for (const m of seedMountains) {
+                await conn.execute(
+                    'INSERT INTO mountains (id, name, region, elevation, grade, minTempC, conditions, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [m.id, m.name, m.region, m.elevation, m.grade, m.minTempC, JSON.stringify(m.conditions), m.notes]
+                );
+            }
+            console.log('[DB] ✅ 12 Gunung default berhasil ditambahkan');
         }
 
         console.log('[DB] ✅ Migrasi selesai - semua tabel siap');

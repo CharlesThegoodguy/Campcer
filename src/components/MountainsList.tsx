@@ -1,7 +1,25 @@
-import { MOUNTAINS, GRADE_INFO } from "@/data/mountains";
-import { Mountain } from "lucide-react";
+import { GRADE_INFO, Mountain } from "@/data/mountains";
+import { Mountain as MountainIcon } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export const MountainsList = () => (
+export const MountainsList = () => {
+  const [mountains, setMountains] = useState<Mountain[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/mountains")
+      .then(res => res.json())
+      .then(data => {
+        setMountains(data.mountains);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
   <section id="mountains" className="bg-secondary/50 py-24">
     <div className="container mx-auto px-4">
       <div className="mb-12 max-w-2xl">
@@ -15,14 +33,16 @@ export const MountainsList = () => (
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {MOUNTAINS.map((m) => {
+        {loading ? (
+          <div className="col-span-full py-10 text-center text-muted-foreground">Memuat data gunung...</div>
+        ) : mountains.map((m) => {
           const g = GRADE_INFO[m.grade];
           return (
             <div key={m.id} className="group rounded-2xl border border-border bg-card p-5 transition-smooth hover:-translate-y-1 hover:shadow-elegant">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-forest text-primary-foreground">
-                    <Mountain className="h-5 w-5" />
+                    <MountainIcon className="h-5 w-5" />
                   </div>
                   <div>
                     <h4 className="font-display font-bold leading-tight">{m.name}</h4>
@@ -50,4 +70,5 @@ export const MountainsList = () => (
       </div>
     </div>
   </section>
-);
+  );
+};

@@ -75,11 +75,10 @@ export const Catalog = () => {
             <button
               key={c.id}
               onClick={() => setActive(c.id)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-smooth ${
-                active === c.id
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-smooth ${active === c.id
                   ? "bg-primary text-primary-foreground shadow-elegant"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
-              }`}
+                }`}
             >
               {c.label}
             </button>
@@ -91,8 +90,8 @@ export const Catalog = () => {
             <h3 className="mb-4 font-display text-lg font-bold text-muted-foreground">Paket Bundling</h3>
             <div className="mb-10 grid gap-5 md:grid-cols-3">
               {products.filter(p => p.category === "package").map((p) => (
-                <div 
-                  key={p.id} 
+                <div
+                  key={p.id}
                   onClick={() => { setSelectedProduct(p); setSelectedSize(""); }}
                   className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-gradient-forest p-6 text-primary-foreground shadow-card-soft transition-smooth hover:shadow-elegant"
                 >
@@ -109,7 +108,7 @@ export const Catalog = () => {
                         <div className="font-display text-2xl font-extrabold">{formatIDR(p.price_per_day)}</div>
                         <div className="text-xs text-white/70">per hari</div>
                       </div>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (getSizesList(p).length > 0 && !selectedSize) {
@@ -138,8 +137,8 @@ export const Catalog = () => {
         {items.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((e) => (
-              <div 
-                key={e.id} 
+              <div
+                key={e.id}
                 onClick={() => { setSelectedProduct(e); setSelectedSize(""); }}
                 className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-elegant"
               >
@@ -160,7 +159,7 @@ export const Catalog = () => {
                       <div className="font-display text-lg font-bold text-primary">{formatIDR(e.price_per_day)}</div>
                       <div className="text-[10px] text-muted-foreground">per hari</div>
                     </div>
-                    <button 
+                    <button
                       onClick={(evt) => {
                         evt.stopPropagation();
                         if (getSizesList(e).length > 0 && !selectedSize) {
@@ -203,7 +202,7 @@ export const Catalog = () => {
               </div>
               <h3 className="font-display text-2xl font-bold">{selectedProduct.name}</h3>
               <p className="mt-4 text-muted-foreground leading-relaxed text-sm whitespace-pre-wrap">{selectedProduct.description || "Tidak ada deskripsi tersedia."}</p>
-              
+
               {getSizesList(selectedProduct).length > 0 && (
                 <div className="mt-4">
                   <label className="mb-2 block text-sm font-semibold">Pilih Ukuran / Size</label>
